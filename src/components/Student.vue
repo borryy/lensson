@@ -1,8 +1,8 @@
 <template>
     <div class="login">
       <img class="logo" src="../assets/logo.png" alt="">
-      <mt-field label="用户名" v-model="userPhone" placeholder="请输入用户名"></mt-field>
-      <mt-field label="密码" v-model="userPwd" type="password" placeholder="密码"></mt-field>
+      <mt-field label="学生姓名" v-model="stuName" placeholder="请输入学生姓名"></mt-field>
+      <mt-field label="手机号" v-model="stuPhone"  placeholder="请输入家长手机号"></mt-field>
       <mt-button type="primary" @click="goIndex" size="large">登录</mt-button>
     </div>
 </template>
@@ -15,8 +15,8 @@ export default {
   name: "Login",
   data() {
     return {
-      userPhone: "",
-      userPwd:""
+      stuName: "",
+      stuPhone:""
     }
   },
   components:{
@@ -31,7 +31,7 @@ export default {
         });
         this.$axios({
           method: 'post',
-          url: '/api/user/userLogin',
+          url: '/api/student/stuLogin',
           data:postData,
           }).then(function(response){
             if(response.data.success){
@@ -41,13 +41,15 @@ export default {
                     duration: 3000
                 });
                 this.$router.push({
-                    name: 'Home',
+                    name: 'Index',
                     params: {}
                 })
             }
           }.bind(this)).catch(function(error){
             console.log(error);
           });
+        
+       
     }
   }
 };

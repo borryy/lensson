@@ -151,7 +151,7 @@
             ]"
           :title="n.stuName">
         </mt-cell-swipe> 
-         <mt-button type="primary" size="large" @click="Loadgrade()">返回</mt-button>
+         <mt-button type="primary" size="large" @click="Loadgrades()">返回</mt-button>
         </div>
            </mt-popup>
            <mt-popup v-model="gradeListType" position="right" >
@@ -171,7 +171,7 @@
                  <div class="text-center m-30">
                  
                   <mt-button type="primary" size="small" @click="saveGrade()">保存</mt-button>
-                  <mt-button type="primary" size="small" @click="loadEditgrade()">返回</mt-button>
+                  <mt-button type="primary" size="small" @click="loadEditgrades()">返回</mt-button>
                 </div>
               </div>
               
@@ -261,11 +261,17 @@ export default {
         studentId:'',
         lessonId:''
       },
+      voluntarily:'',
       gradeStatusList:[],
       dimensionTitleList:[],
       dimensionList:[],
       studentList:[],
       lessonList:[],
+      CountStudent:{},
+      countStudentByScore:{},
+      rankByImprove:{},
+      rankByCapabilityPid:{},
+      countFullScoreByLessonId:{},
       insertStudentList:{
           id:'',
           title:'',
@@ -298,13 +304,19 @@ export default {
   updated() {
     this.$nextTick(function(){
       this.temp = true
-       this.temps = true
+      this.temps = true
+      
     })
+    // this.showEcharts();
   },
   mounted() {
-    this.showEcharts();
     this.showStudent();
     this.showLesson();
+    this.queryecharts();
+    this.queryecharts1();
+    this.queryecharts2();
+    this.queryecharts3();
+    this.queryecharts4();
   },
   methods: {
     //加载学生列表
@@ -315,7 +327,7 @@ export default {
       });
       this.$axios({
         method: 'post',
-        url: 'http://192.168.1.222/course/student/queryStudentList',
+        url: '/api/student/queryStudentList',
         data:postData,
         }).then(function(response){
           this.studentList = response.data.data.rows
@@ -365,7 +377,7 @@ export default {
           if(this.insertStudentList.id == ''){
             this.$axios({
             method: 'post',
-            url: 'http://192.168.1.222/course/student/insertStudent',
+            url: '/api/student/insertStudent',
             data:postData,
             }).then(function(response){
               Toast({
@@ -382,7 +394,7 @@ export default {
             //修改学生
             this.$axios({
             method: 'post',
-            url: 'http://192.168.1.222/course/student/updateStudent',
+            url: '/api/student/updateStudent',
             data:postData,
             }).then(function(response){
               Toast({
@@ -409,7 +421,7 @@ export default {
         });
         this.$axios({
           method: 'post',
-          url: 'http://192.168.1.222/course/student/delStudent',
+          url: '/api/student/delStudent',
           data:postData,
           }).then(function(response){
             Toast({
@@ -432,7 +444,7 @@ export default {
       });
       this.$axios({
         method: 'post',
-        url: 'http://192.168.1.222/course/lesson/queryLessonList',
+        url: '/api/lesson/queryLessonList',
         data:postData,
         }).then(function(response){
            
@@ -481,7 +493,7 @@ export default {
         if(this.insertLessonList.title == '新增课程'){
           this.$axios({
             method: 'post',
-            url: 'http://192.168.1.222/course/lesson/insertLesson',
+            url: '/api/lesson/insertLesson',
             data:postData,
             }).then(function(response){
               Toast({
@@ -498,7 +510,7 @@ export default {
           //编辑课程
             this.$axios({
             method: 'post',
-            url: 'http://192.168.1.222/course/lesson/updateLesson',
+            url: '/api/lesson/updateLesson',
             data:postData,
             }).then(function(response){
               Toast({
@@ -522,7 +534,7 @@ export default {
         });
         this.$axios({
           method: 'post',
-          url: 'http://192.168.1.222/course/lesson/delLesson',
+          url: '/api/lesson/delLesson',
           data:postData,
           }).then(function(response){
             Toast({
@@ -562,7 +574,7 @@ export default {
         });
       this.$axios({
         method: 'post',
-        url: 'http://192.168.1.222/course/lessonStudent/queryLessonStudentList',
+        url: '/api/lessonStudent/queryLessonStudentList',
         data:postData,
         }).then(function(response){
           if(response.data.success){
@@ -591,7 +603,7 @@ export default {
         });
       this.$axios({
         method: 'post',
-        url: 'http://192.168.1.222/course/lessonStudent/insertLessonStudentList',
+        url: '/api/lessonStudent/insertLessonStudentList',
         data:postData,
         }).then(function(response){
           Toast({
@@ -605,43 +617,44 @@ export default {
           console.log(error);
         });
     },
+    //关闭评分
+    Loadgrades(){
+      this.gradeType = !this.gradeType;
+    },
     //打开评分
     Loadgrade(index){
       this.shows()
       this.gradeType = !this.gradeType;
-      if(index!=''||index!=null){
-        this.sxjson.lessonId = this.lessonList[index].id
+      this.sxjson.lessonId = this.lessonList[index].id
       let postData = this.$qs.stringify({
           lessonId:this.sxjson.lessonId
         });
-        this.$axios({
-          method: 'post',
-          url: 'http://192.168.1.222/course/lessonStudent/queryLessonStudentList',
-          data:postData,
-          }).then(function(response){
-           
-            this.gradeStatusList = response.data.data.rows
-          }.bind(this)).catch(function(error){
-            console.log(error);
-          });
-      }
+      this.$axios({
+        method: 'post',
+        url: '/api/lessonStudent/queryLessonStudentList',
+        data:postData,
+        }).then(function(response){
+          this.gradeStatusList = response.data.data.rows
+        }.bind(this)).catch(function(error){
+          console.log(error);
+        });
       
+    },
+    //关闭能力维度评分列表
+    loadEditgrades(){
+      this.gradeListType = !this.gradeListType
     },
     //打开能力维度评分列表
     loadEditgrade(index){
       this.loadDimension();
       this.gradeListType = !this.gradeListType
-      if(index!=''||index!=null){
-        this.sxjson.studentId = this.gradeStatusList[index].studentId
-      }
-      
-      
+      this.sxjson.studentId = this.gradeStatusList[index].studentId
     },
     //获取能力维度
     loadDimension(){
       this.$axios({
         method: 'post',
-        url: 'http://192.168.1.222/course/capability/queryCapabilityTree'
+        url: '/api/capability/queryCapabilityTree'
         }).then(function(response){
           this.dimensionList = response.data.data.map(function(item){
             return{
@@ -676,10 +689,9 @@ export default {
           lessonId:this.sxjson.lessonId,
           scoreJson:JSON.stringify(newArr) 
         });
-        // console.log(this.dimensionList)
         this.$axios({
           method: 'post',
-          url: 'http://192.168.1.222/course/score/insertScore',
+          url: '/api/score/insertScore',
           data:postData,
           }).then(function(response){
             Toast({
@@ -687,7 +699,78 @@ export default {
               position: 'bottom',
               duration: 1000
             });
+            this.makeAppraise();
+            
             this.gradeListType = !this.gradeListType
+          }.bind(this)).catch(function(error){
+            console.log(error);
+          });
+    },
+    //自动生成评价
+    makeAppraise(){
+      let postData = this.$qs.stringify({
+          studentId:this.sxjson.studentId,
+          lessonId:this.sxjson.lessonId
+        });
+        this.$axios({
+          method: 'post',
+          url: '/api/comment/autoComment',
+          data:postData,
+          }).then(function(response){
+            var str = '';
+            for(var i=0;i<response.data.data.length;i++){
+              if(response.data.data[i]!=null){
+                str+=response.data.data[i].contentDetail+','
+              }else{
+                str+=''
+              }
+              
+            }
+            this.voluntarily = str;
+            console.log(this.voluntarily)
+            this.addAppraise(this.voluntarily)
+          }.bind(this)).catch(function(error){
+            console.log(error);
+          });
+    },
+    //查看评价
+    queryAppraise(){
+      let postData = this.$qs.stringify({
+          studentId:this.sxjson.studentId,
+          lessonId:this.sxjson.lessonId
+        });
+        this.$axios({
+          method: 'post',
+          url: '/api/comment/queryComment',
+          data:postData,
+          }).then(function(response){
+            
+          }.bind(this)).catch(function(error){
+            console.log(error);
+          });
+    },
+    //打开评价
+    loadEditevaluate(index){
+        this.sxjson.studentId = this.gradeStatusList[index].studentId
+        this.queryAppraise()
+    },
+    //添加评价
+    addAppraise(voluntarily){
+      let postData = this.$qs.stringify({
+          studentId:this.sxjson.studentId,
+          lessonId:this.sxjson.lessonId,
+          content:voluntarily
+        });
+        this.$axios({
+          method: 'post',
+          url: '/api/comment/insertComment',
+          data:postData,
+          }).then(function(response){
+            Toast({
+              message: '评价成功',
+              position: 'bottom',
+              duration: 2000
+            });
           }.bind(this)).catch(function(error){
             console.log(error);
           });
@@ -700,19 +783,87 @@ export default {
         this.temps = true
       })
    },
+   //获取echarts
+   queryecharts(){
+     let postData = this.$qs.stringify({
+          pageSize:7
+        });
+        this.$axios({
+          method: 'post',
+          url: '/api/echarts/CountStudent',
+          data:postData,
+          }).then(function(response){
+            this.CountStudent = response.data.data
+            this.showEcharts1()
+          }.bind(this)).catch(function(error){
+            console.log(error);
+          });
+   },
+   queryecharts1(){
+     let postData = this.$qs.stringify({
+          // pageSize:7
+        });
+        this.$axios({
+          method: 'post',
+          url: '/api/echarts/countStudentByScore',
+          data:postData,
+          }).then(function(response){
+            this.countStudentByScore = response.data.data
+            this.showEcharts2()
+          }.bind(this)).catch(function(error){
+            console.log(error);
+          });
+   },
    
-    
-    // 查看学生
-    checkSection(index) {
-      console.log(index);
-    },
-    showEcharts() {
-      let myChart1 = this.$echarts.init(document.getElementById("studentSum"));
-      let myChart2 = this.$echarts.init(document.getElementById("section"));
-      let myChart3 = this.$echarts.init(document.getElementById("dimension"));
-      let myChart4 = this.$echarts.init(document.getElementById("progress"));
-      let myChart5 = this.$echarts.init(document.getElementById("lately"));
-      let option1 = {
+   queryecharts2(){
+     let postData = this.$qs.stringify({
+          // pageSize:7
+        });
+        this.$axios({
+          method: 'post',
+          url: '/api/echarts/countFullScoreByLessonId',
+          data:postData,
+          }).then(function(response){
+            this.countFullScoreByLessonId = response.data.data
+            this.showEcharts3()
+          }.bind(this)).catch(function(error){
+            console.log(error);
+          });
+   },
+   queryecharts3(){
+     let postData = this.$qs.stringify({
+          pageSize:7
+        });
+        this.$axios({
+          method: 'post',
+          url: '/api/echarts/rankByImprove',
+          data:postData,
+          }).then(function(response){
+            this.rankByImprove = response.data.data
+            this.showEcharts4()
+          }.bind(this)).catch(function(error){
+            console.log(error);
+          });
+   },
+   queryecharts4(){
+     let postData = this.$qs.stringify({
+          pageSize:7
+        });
+        this.$axios({
+          method: 'post',
+          url: '/api/echarts/rankByCapabilityPid',
+          data:postData,
+          }).then(function(response){
+            this.rankByCapabilityPid = response.data.data
+            this.showEcharts5()
+          }.bind(this)).catch(function(error){
+            console.log(error);
+          });
+   },
+   showEcharts1() {
+     let that = this;
+     let myChart1 = this.$echarts.init(document.getElementById("studentSum"));
+     let option1 = {
         tooltip: {
           trigger: "axis"
         },
@@ -730,7 +881,7 @@ export default {
           {
             type: "category",
             boundaryGap: false,
-            data: ["周一", "周二", "周三", "周四", "周五", "周六", "周日"]
+            data: that.CountStudent.lessonTime
           }
         ],
         yAxis: [
@@ -743,16 +894,21 @@ export default {
             name: "本期学生总数",
             type: "line",
             stack: "总量",
-            data: [120, 132, 101, 134, 90, 230, 210]
+            data: that.CountStudent.lessonTime
           },
           {
             name: "学生总数",
             type: "line",
             stack: "总量",
-            data: [220, 182, 191, 234, 290, 330, 310]
+            data: that.CountStudent.studentSum
           }
         ]
       };
+    myChart1.setOption(option1);
+   },
+   showEcharts2() {
+      var that = this;
+      let myChart2 = this.$echarts.init(document.getElementById("section"));
       let option2 = {
         tooltip: {
           trigger: "item",
@@ -777,7 +933,12 @@ export default {
           }
         ]
       };
-      let option3 = {
+      myChart2.setOption(option2);
+   },
+   showEcharts3() {
+      var that = this;
+      let myChart3 = this.$echarts.init(document.getElementById("dimension"));
+       let option3 = {
         tooltip: {
           trigger: "item",
           formatter: "{a} <br/>{b} : {c} ({d}%)"
@@ -805,6 +966,11 @@ export default {
           }
         ]
       };
+      myChart3.setOption(option3);
+   },
+   showEcharts4() {
+      var that = this;
+      let myChart4 = this.$echarts.init(document.getElementById("progress"));
       let option4 = {
         tooltip: {
           trigger: "item",
@@ -843,6 +1009,11 @@ export default {
           }
         ]
       };
+       myChart4.setOption(option4);
+   },
+   showEcharts5() {
+      var that = this;
+      let myChart5 = this.$echarts.init(document.getElementById("lately"));
       let option5 = {
         tooltip: {
           trigger: "item",
@@ -881,10 +1052,6 @@ export default {
           }
         ]
       };
-      myChart1.setOption(option1);
-      myChart2.setOption(option2);
-      myChart3.setOption(option3);
-      myChart4.setOption(option4);
       myChart5.setOption(option5);
     }
   }
