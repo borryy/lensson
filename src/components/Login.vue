@@ -26,12 +26,12 @@ export default {
   methods:{
     goIndex(){
         let postData = this.$qs.stringify({
-          stuName:this.stuName,
-          stuPhone:this.stuPhone
+          userPwd:this.userPwd,
+          userPhone:this.userPhone
         });
         this.$axios({
           method: 'post',
-          url: '/api/user/userLogin',
+          url: '/course/user/userLogin',
           data:postData,
           }).then(function(response){
             if(response.data.success){
@@ -42,7 +42,9 @@ export default {
                 });
                 this.$router.push({
                     name: 'Home',
-                    params: {}
+                    params: {
+                      msg:'success'
+                    }
                 })
             }
           }.bind(this)).catch(function(error){
@@ -71,5 +73,8 @@ export default {
   }
   .login .mint-cell-wrapper{
     background: none!important;
+  }
+  body{
+    background-color: #fff;
   }
 </style>

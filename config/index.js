@@ -11,17 +11,17 @@ module.exports = {
     assetsSubDirectory: 'static',
     assetsPublicPath: '/',
     proxyTable: {
-      '/api':{
-        target: 'http://www.zufangt.com/course/',
+      '/':{
+        target: 'http://192.168.1.222/',
         changeOrigin:true,
         pathRewrite:{
-            '^/api':''
+            '^/':''
         }
       }
     },
 
     // Various Dev Server settings
-    host: '192.168.0.101', // can be overwritten by process.env.HOST
+    host: '192.168.1.2', // can be overwritten by process.env.HOST
     port: 8080, // can be overwritten by process.env.PORT, if port is in use, a free one will be determined
     autoOpenBrowser: false,
     errorOverlay: true,
@@ -50,8 +50,8 @@ module.exports = {
 
     // Paths
     assetsRoot: path.resolve(__dirname, '../dist'),
-    assetsSubDirectory: 'static',
-    assetsPublicPath: '/',
+    assetsSubDirectory: './static',
+    assetsPublicPath: './',
 
     /**
      * Source Maps

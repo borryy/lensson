@@ -2,34 +2,26 @@
   <div class="index">
     <div class="head">
       <img src="../assets/logo.png" alt>
-      <h3>小明同学</h3>
+      <h3>{{stuName}}</h3>
     </div>
     <div class="history">
       <mt-button type="primary" size="small" @click="LoadRight()">历史</mt-button>
       <mt-popup v-model="popupVisible" position="right" >
         <div class="rightContent">
           <h4>历史评价</h4>
-          <div class="list" @click="LoadRight()">
-            <mt-cell title="2019-10-10" is-link></mt-cell>
+          <div class="list" v-for="(item,index) in echartsList" :key="index" @click="LoadEc(item.lessonId,item.lessonTime)">
+            <mt-cell :title="item.lessonName+'('+ item.lessonTime +')'" is-link></mt-cell>
           </div>
-          <div class="list" @click="LoadRight()">
-            <mt-cell title="2019-10-10" is-link></mt-cell>
-          </div>
-          <div class="list" @click="LoadRight()">
-            <mt-cell title="2019-10-10" is-link></mt-cell>
-          </div>
-          <div class="list" @click="LoadRight()">
-            <mt-cell title="2019-10-10" is-link></mt-cell>
-          </div>
+         
         </div>
       </mt-popup>
     </div>
     <div id="myChart"></div>
     <div class="appraise">
-      <h3>评价 <small>2019-10-10</small></h3> 
+      <h3>评价 <small>{{time}}评价</small></h3> 
       <div class="content">
           <h5>研学学分评价</h5>
-          <p>主动与他人交流能力很强，执行决策能力，善于分享，能够迅速理解老师的讲解的知识，遵守纪律，非常有自律性，尊重他人</p>
+          <p>{{content}}</p>
       </div>
     </div>
   </div>
@@ -43,7 +35,13 @@ export default {
   name: "Index",
   data() {
     return {
-      popupVisible: false
+      popupVisible: false,
+      echartsJson:[],
+      echValue:[],
+      echartsList:[],
+      content:'',
+      time:'',
+      stuName:''
     };
   },
   components: {
@@ -52,33 +50,52 @@ export default {
     mtCell:Cell
   },
   mounted() {
-    this.showEcharts();
-    this.$axios.get('api/capability/queryCapabilityTree')
-    .then(function (data) {
-      console.log(response);
-    },function(err){
-      console.log(err);
-         })
-    .catch(function (error) {
-      console.log(error);
+    console.log(this.$route.params.studentId)
+    if(this.$route.params.studentId==undefined){
+      this.$router.push({
+            name: 'Student',
+            params: {
+              
+            }
         })
-.then(function(res){
-    res=res.data;
-    if(res.code=='000'){
-    }else{
     }
-})
+    this.showEcharts();
+   
 
   },
   methods: {
     showEcharts() {
+      if(this.time == ''){
+        this.time='最近一次'
+      }
+      this.stuName = this.$route.params.stuName
+      var ids = this.$route.params.studentId
+      let postData = this.$qs.stringify({
+          studentId:ids
+        });
+        this.$axios({
+          method: 'post',
+          url: '/course/echarts/queryRadar',
+          data:postData,
+          }).then(function(response){
+            if(response.data.success){
+                this.echartsJson = response.data.data
+                this.loadEchart()
+                this.loadpj()
+            }
+          }.bind(this)).catch(function(error){
+            console.log(error);
+          });
+      
+    },
+    loadEchart(){
       // 基于准备好的dom，初始化echarts实例
       let myChart = this.$echarts.init(document.getElementById("myChart"));
       // 绘制图表
       let option = {
         title: {
           text: "八项指标分部",
-          subtext: "2019-10-10"
+          subtext: this.time
         },
         tooltip: {
           trigger: "axis"
@@ -100,16 +117,7 @@ export default {
         calculable: true,
         polar: [
           {
-            indicator: [
-              { name: "沟通能力", max: 100 },
-              { name: "领导力及合作能力", max: 100 },
-              { name: "适应性", max: 100 },
-              { name: "思维习惯", max: 100 },
-              { name: "决策能力", max: 100 },
-              { name: "批判性思维", max: 100 },
-              { name: "分析创造思维", max: 100 },
-              { name: "全球视野", max: 100 }
-            ],
+            indicator: this.echartsJson,
             radius: 80
           }
         ],
@@ -138,7 +146,7 @@ export default {
             data: [
               
               {
-                value: [97, 32, 74, 95, 88, 92, 50, 50.5],
+                value: this.echartsJson.map(function(item){ return item.value}),
                 name: "小明同学",
                 label: {
                         normal: {
@@ -164,8 +172,82 @@ export default {
           myChart.resize(); //使第一个图表适应
       }
     },
+    loadpj(){
+      var ids = this.$route.params.studentId
+      let postData = this.$qs.stringify({
+          studentId:ids
+        });
+        this.$axios({
+          method: 'post',
+          url: '/course/comment/queryCommentByLessonIdOrStudentId',
+          data:postData,
+          }).then(function(response){
+            if(response.data.success){
+                this.content = response.data.data.content
+            }
+          }.bind(this)).catch(function(error){
+            console.log(error);
+          });
+    },
+    loadpj1(lessonId){
+      var ids = this.$route.params.studentId
+      let postData = this.$qs.stringify({
+          studentId:ids,
+          lessonId:lessonId
+        });
+        this.$axios({
+          method: 'post',
+          url: '/course/comment/queryCommentByLessonIdOrStudentId',
+          data:postData,
+          }).then(function(response){
+            if(response.data.success){
+                this.content = response.data.data.content
+            }
+          }.bind(this)).catch(function(error){
+            console.log(error);
+          });
+    },
+    LoadEc(lessonId,time){
+      this.time = time
+      this.loadpj1(lessonId)
+      var ids = this.$route.params.studentId
+      let postData = this.$qs.stringify({
+          studentId:ids,
+          lessonId:lessonId
+        });
+        this.$axios({
+          method: 'post',
+          url: '/course/echarts/queryRadar',
+          data:postData,
+          }).then(function(response){
+            if(response.data.success){
+                this.echartsJson = response.data.data
+                this.loadEchart()
+                this.popupVisible = !this.popupVisible
+            }
+          }.bind(this)).catch(function(error){
+            console.log(error);
+          });
+    },
     LoadRight() {
+      var ids = this.$route.params.studentId
       this.popupVisible = !this.popupVisible
+      let postData = this.$qs.stringify({
+          studentId:ids
+        });
+        this.$axios({
+          method: 'post',
+          url: '/course/lessonStudent/queryLessonListByStudentId',
+          data:postData,
+          }).then(function(response){
+            if(response.data.success){
+                this.echartsList = response.data.data.rows
+                
+                
+            }
+          }.bind(this)).catch(function(error){
+            console.log(error);
+          });
     }
   }
 };

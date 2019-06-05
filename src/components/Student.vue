@@ -31,7 +31,7 @@ export default {
         });
         this.$axios({
           method: 'post',
-          url: '/api/student/stuLogin',
+          url: '/course/student/stuLogin',
           data:postData,
           }).then(function(response){
             if(response.data.success){
@@ -42,7 +42,10 @@ export default {
                 });
                 this.$router.push({
                     name: 'Index',
-                    params: {}
+                    params: {
+                      studentId:response.data.data.id,
+                      stuName:response.data.data.stuName
+                    }
                 })
             }
           }.bind(this)).catch(function(error){
@@ -73,5 +76,8 @@ export default {
   }
   .login .mint-cell-wrapper{
     background: none!important;
+  }
+  body{
+    background-color: #fff;
   }
 </style>

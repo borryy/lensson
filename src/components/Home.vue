@@ -6,37 +6,56 @@
           <h4>研学学分数据统计</h4>
         </div>
         <div class="studentSum item">
-          <h3>学生总数</h3>
+          <h3>学生总数 
+            
+            </h3>
           <div id="studentSum" class="echart"></div>
         </div>
         <div class="section item">
-          <h3>分数区间数量分布</h3>
+          <h3>分数区间数量分布 
+           <select v-model="fid" @change="queryecharts1()" style="padding:5px;outline:none;">
+             <option v-for="(item,index) in dimensionList" :key="index" :value="item.id">{{item.capName}}</option>
+           </select>
+          </h3>
           <div id="section" class="echart"></div>
         </div>
         <div class="dimension item">
           <h3>各维度满分学生分布</h3>
           <div id="dimension" class="echart"></div>
         </div>
-        <div class="progress item">
-          <h3>进步最快的学生Top3</h3>
-          <div id="progress" class="echart"></div>
-        </div>
-        <div class="lately item">
-          <h3>最近一次各维度评分Top3</h3>
-          <div id="lately" class="echart"></div>
-        </div>
+       
       </mt-tab-container-item>
       <mt-tab-container-item id="page">
         <div class="top">
-          <h4>配置参数</h4>
+          <h4>Top排行榜</h4>
         </div>
         <div class="configure">
-          <mt-field label="进步最快的学生" placeholder="请输入前几名" v-model="progressNum"></mt-field>
-          <mt-field label="最近一次各维度评分" placeholder="请输入前几名" v-model="latelyNum"></mt-field>
+          <h3>进步最快的学生Top{{zkxs}}
+            <select v-model="zkxs" style="padding:5px;outline:none;" @change="queryecharts3()">
+              <option value="3">前三名</option>
+              <option value="5">前五名</option>
+              <option value="10">前十名</option>
+              <option value="20">前二十名</option>
+            </select>
+          </h3>
+          <div class="listzk">
+            <mt-cell  title="姓名" value="进步分数"></mt-cell>
+            <mt-cell v-for="(item,index) in rankByImprove" :key="index" :title="item.stuName" :value="item.scoreImproved"></mt-cell>
+          </div>
+          <h3>课程各维度评分排名Top{{mfxs}}
+            <select v-model="mfxs" style="padding:5px;outline:none;" @change="queryecharts4()">
+              <option value="3">前三名</option>
+              <option value="5">前五名</option>
+              <option value="10">前十名</option>
+              <option value="20">前二十名</option>
+            </select>
+          </h3>
+          <div class="listzk">
+            <mt-cell  title="姓名" value="分数"></mt-cell>
+            <mt-cell v-for="(item,index) in rankByCapabilityPid" :key="index" :title="item.stuName" :value="item.scoreTotal"></mt-cell>
+          </div>
         </div>
-        <div class="save">
-          <mt-button type="primary" size="large">保存</mt-button>
-        </div>
+        
       </mt-tab-container-item>
       <mt-tab-container-item id="list1">
         <div class="top">
@@ -44,8 +63,8 @@
         </div>
         <div class="operat">
           <div class="serch">
-            <input type="text">
-            <mt-button type="primary" size="small">搜索</mt-button>
+            <input type="text" v-model="stuNames">
+            <mt-button type="primary" size="small" @click="showStudent(stuNames)">搜索</mt-button>
           </div>
           <mt-button type="primary" size="small" @click="LoadAddStudent()">新增</mt-button>
           <mt-popup v-model="popupStudent" position="right" >
@@ -91,8 +110,8 @@
         </div>
         <div class="operat">
           <div class="serch">
-            <input type="text">
-            <mt-button type="primary" size="small">搜索</mt-button>
+            <input type="text" v-model="lessonTimes">
+            <mt-button type="primary" size="small" @click="showLesson(lessonTimes)">搜索</mt-button>
           </div>
           <mt-button type="primary" size="small" @click="LoadRights()">新增</mt-button>
           <mt-popup v-model="popupVisible" position="right" >
@@ -154,6 +173,17 @@
          <mt-button type="primary" size="large" @click="Loadgrades()">返回</mt-button>
         </div>
            </mt-popup>
+            <mt-popup v-model="pjType" position="right" >
+             <div class=" rightContent" v-if="temp">
+              <h4>该课程学生评价</h4>
+              <textarea style="width:100%;outline:none;padding:10px;box-sizing:border-box;" name="" id="" cols="30" rows="10" v-model="pj"></textarea>
+              <div style="text-align:center;">
+                <mt-button type="primary" size="small" @click="savepj()">确定</mt-button>
+                <mt-button type="primary" size="small" @click="closepj()">返回</mt-button>
+              </div>
+              
+        </div>
+           </mt-popup>
            <mt-popup v-model="gradeListType" position="right" >
               <div class="rightContent">
                 <div class="list" v-for="(grade,index) in dimensionList" :key="index">
@@ -205,24 +235,23 @@
 
     <mt-tabbar v-model="selected" :fixed="fix" @click="shows()">
       <mt-tab-item id="home">
-        <img slot="icon" src="../assets/logo.png">
+        <img slot="icon" src="../assets/home.png">
         首页
       </mt-tab-item>
       <mt-tab-item id="page">
-        <img slot="icon" src="../assets/logo.png">
-        配置
+        <img slot="icon" src="../assets/top.png">
+        Top榜
       </mt-tab-item>
     
       <mt-tab-item id="list1" @click.native="shows()">
-        <img slot="icon" src="../assets/logo.png">
+        <img slot="icon" src="../assets/student.png">
         学生列表
       </mt-tab-item>
-      
-      
       <mt-tab-item id="list2" @click.native="shows()">
-        <img slot="icon" src="../assets/logo.png">
+        <img slot="icon" src="../assets/lesson.png">
         课程列表
       </mt-tab-item>
+     
     </mt-tabbar>
   </div>
 </template>
@@ -235,6 +264,7 @@ import { Field } from "mint-ui";
 import { CellSwipe } from "mint-ui";
 import { Checklist } from 'mint-ui';
 import { Toast } from 'mint-ui';
+import { Picker } from 'mint-ui';
 import { MessageBox } from 'mint-ui';
 import { Tabbar, TabItem, TabContainer, TabContainerItem } from "mint-ui";
 // import func from '../../vue-temp/vue-editor-bridge';
@@ -242,6 +272,10 @@ export default {
   name: "Home",
   data() {
     return {
+      fid:'1',
+      fids:'1',
+      stuNames:'',
+      lessonTimes:'',
       selected: "home",
       popupVisible: false,
       studentVisible:false,
@@ -253,6 +287,7 @@ export default {
       temp:false,
       temps:false,
       gradeType:false,
+      pjType:false,
       gradeListType:false,
       selectAllType:false,
       value:[],
@@ -261,6 +296,8 @@ export default {
         studentId:'',
         lessonId:''
       },
+      pj:'',
+      pjid:'',
       voluntarily:'',
       gradeStatusList:[],
       dimensionTitleList:[],
@@ -286,7 +323,9 @@ export default {
         lessonContent:'',
         lessonTime:'',
         showStu:false
-      }
+      },
+      zkxs:'3',
+      mfxs:'3'
     };
   },
   components: {
@@ -298,6 +337,7 @@ export default {
     mtTabItem: TabItem,
     mtCellSwipe: CellSwipe,
     mtChecklist: Checklist,
+    mtPicker:Picker,
     mtTabContainer: TabContainer,
     mtTabContainerItem: TabContainerItem
   },
@@ -310,24 +350,35 @@ export default {
     // this.showEcharts();
   },
   mounted() {
-    this.showStudent();
+    if(this.$route.params.msg != "success"){
+      this.$router.push({
+            name: 'Login',
+            params: {
+              
+            }
+        })
+    }
+    
+    this.showStudent(this.stuNames);
     this.showLesson();
     this.queryecharts();
     this.queryecharts1();
     this.queryecharts2();
     this.queryecharts3();
     this.queryecharts4();
+    this.loadDimension();
   },
   methods: {
     //加载学生列表
-    showStudent(){
+    showStudent(stuName){
        let postData = this.$qs.stringify({
           pageNum:1,
-          pageSize:100
+          pageSize:100,
+          stuName:stuName
       });
       this.$axios({
         method: 'post',
-        url: '/api/student/queryStudentList',
+        url: '/course/student/queryStudentList',
         data:postData,
         }).then(function(response){
           this.studentList = response.data.data.rows
@@ -377,7 +428,7 @@ export default {
           if(this.insertStudentList.id == ''){
             this.$axios({
             method: 'post',
-            url: '/api/student/insertStudent',
+            url: '/course/student/insertStudent',
             data:postData,
             }).then(function(response){
               Toast({
@@ -394,7 +445,7 @@ export default {
             //修改学生
             this.$axios({
             method: 'post',
-            url: '/api/student/updateStudent',
+            url: '/course/student/updateStudent',
             data:postData,
             }).then(function(response){
               Toast({
@@ -421,7 +472,7 @@ export default {
         });
         this.$axios({
           method: 'post',
-          url: '/api/student/delStudent',
+          url: '/course/student/delStudent',
           data:postData,
           }).then(function(response){
             Toast({
@@ -437,14 +488,15 @@ export default {
     },
 
     //加载课程列表
-    showLesson(){
+    showLesson(lessonName){
       let postData = this.$qs.stringify({
           pageNum:1,
-          pageSize:100
+          pageSize:100,
+          lessonName:lessonName
       });
       this.$axios({
         method: 'post',
-        url: '/api/lesson/queryLessonList',
+        url: '/course/lesson/queryLessonList',
         data:postData,
         }).then(function(response){
            
@@ -493,7 +545,7 @@ export default {
         if(this.insertLessonList.title == '新增课程'){
           this.$axios({
             method: 'post',
-            url: '/api/lesson/insertLesson',
+            url: '/course/lesson/insertLesson',
             data:postData,
             }).then(function(response){
               Toast({
@@ -510,7 +562,7 @@ export default {
           //编辑课程
             this.$axios({
             method: 'post',
-            url: '/api/lesson/updateLesson',
+            url: '/course/lesson/updateLesson',
             data:postData,
             }).then(function(response){
               Toast({
@@ -534,7 +586,7 @@ export default {
         });
         this.$axios({
           method: 'post',
-          url: '/api/lesson/delLesson',
+          url: '/course/lesson/delLesson',
           data:postData,
           }).then(function(response){
             Toast({
@@ -574,7 +626,7 @@ export default {
         });
       this.$axios({
         method: 'post',
-        url: '/api/lessonStudent/queryLessonStudentList',
+        url: '/course/lessonStudent/queryLessonStudentList',
         data:postData,
         }).then(function(response){
           if(response.data.success){
@@ -603,7 +655,7 @@ export default {
         });
       this.$axios({
         method: 'post',
-        url: '/api/lessonStudent/insertLessonStudentList',
+        url: '/course/lessonStudent/insertLessonStudentList',
         data:postData,
         }).then(function(response){
           Toast({
@@ -631,7 +683,7 @@ export default {
         });
       this.$axios({
         method: 'post',
-        url: '/api/lessonStudent/queryLessonStudentList',
+        url: '/course/lessonStudent/queryLessonStudentList',
         data:postData,
         }).then(function(response){
           this.gradeStatusList = response.data.data.rows
@@ -654,7 +706,7 @@ export default {
     loadDimension(){
       this.$axios({
         method: 'post',
-        url: '/api/capability/queryCapabilityTree'
+        url: '/course/capability/queryCapabilityTree'
         }).then(function(response){
           this.dimensionList = response.data.data.map(function(item){
             return{
@@ -670,6 +722,7 @@ export default {
               })
             }
           })
+          console.log(this.dimensionList)
         }.bind(this)).catch(function(error){
           console.log(error);
         });
@@ -679,7 +732,7 @@ export default {
      var newArr = this.dimensionList.reduce((total, i) => {
           return total.concat(i.capValue.map(item => ({
           capabilityId: item,
-          parentCapId: i.id,
+          parentCapid: i.id,
           score:100
           })));
         }, []);
@@ -691,20 +744,63 @@ export default {
         });
         this.$axios({
           method: 'post',
-          url: '/api/score/insertScore',
+          url: '/course/score/queryScoreList',
           data:postData,
           }).then(function(response){
-            Toast({
-              message: '评分成功',
-              position: 'bottom',
-              duration: 1000
-            });
-            this.makeAppraise();
-            
-            this.gradeListType = !this.gradeListType
+            if(response.data.data.length < 1){
+              this.$axios({
+              method: 'post',
+              url: '/course/score/insertScore',
+              data:postData,
+              }).then(function(response){
+                Toast({
+                  message: '评分成功',
+                  position: 'bottom',
+                  duration: 1000
+                });
+                this.makeAppraise();
+                
+                this.gradeListType = !this.gradeListType
+              }.bind(this)).catch(function(error){
+                console.log(error);
+              });
+            }else{
+              this.$axios({
+              method: 'post',
+              url: '/course/score/updateScoreDetail',
+              data:postData,
+              }).then(function(response){
+                Toast({
+                  message: '评分修改成功',
+                  position: 'bottom',
+                  duration: 1000
+                });
+                this.makeAppraise();
+                
+                this.gradeListType = !this.gradeListType
+              }.bind(this)).catch(function(error){
+                console.log(error);
+              });
+            }
           }.bind(this)).catch(function(error){
             console.log(error);
           });
+        // this.$axios({
+        //   method: 'post',
+        //   url: '/course/score/insertScore',
+        //   data:postData,
+        //   }).then(function(response){
+        //     Toast({
+        //       message: '评分成功',
+        //       position: 'bottom',
+        //       duration: 1000
+        //     });
+        //     this.makeAppraise();
+            
+        //     this.gradeListType = !this.gradeListType
+        //   }.bind(this)).catch(function(error){
+        //     console.log(error);
+        //   });
     },
     //自动生成评价
     makeAppraise(){
@@ -714,7 +810,7 @@ export default {
         });
         this.$axios({
           method: 'post',
-          url: '/api/comment/autoComment',
+          url: '/course/comment/autoComment',
           data:postData,
           }).then(function(response){
             var str = '';
@@ -741,10 +837,11 @@ export default {
         });
         this.$axios({
           method: 'post',
-          url: '/api/comment/queryComment',
+          url: '/course/comment/queryCommentByLessonIdOrStudentId',
           data:postData,
           }).then(function(response){
-            
+            this.pj = response.data.data.content
+            this.pjid= response.data.data.id
           }.bind(this)).catch(function(error){
             console.log(error);
           });
@@ -753,6 +850,32 @@ export default {
     loadEditevaluate(index){
         this.sxjson.studentId = this.gradeStatusList[index].studentId
         this.queryAppraise()
+        this.pjType = !this.pjType
+    },
+    //关闭评价
+    closepj(){
+      this.pjType = !this.pjType
+    },
+    //修改评价
+    savepj(){
+       let postData = this.$qs.stringify({
+          id:this.pjid,
+          content:this.pj
+        });
+        this.$axios({
+          method: 'post',
+          url: '/course/comment/updateComment',
+          data:postData,
+          }).then(function(response){
+            Toast({
+              message: '评价成功',
+              position: 'bottom',
+              duration: 2000
+            });
+            this.pjType = !this.pjType
+          }.bind(this)).catch(function(error){
+            console.log(error);
+          });
     },
     //添加评价
     addAppraise(voluntarily){
@@ -763,7 +886,7 @@ export default {
         });
         this.$axios({
           method: 'post',
-          url: '/api/comment/insertComment',
+          url: '/course/comment/insertComment',
           data:postData,
           }).then(function(response){
             Toast({
@@ -790,7 +913,7 @@ export default {
         });
         this.$axios({
           method: 'post',
-          url: '/api/echarts/CountStudent',
+          url: '/course/echarts/CountStudent',
           data:postData,
           }).then(function(response){
             this.CountStudent = response.data.data
@@ -800,12 +923,14 @@ export default {
           });
    },
    queryecharts1(){
-     let postData = this.$qs.stringify({
-          // pageSize:7
+   
+      let postData = this.$qs.stringify({
+          capabilityPid:this.fid
         });
+    
         this.$axios({
           method: 'post',
-          url: '/api/echarts/countStudentByScore',
+          url: '/course/echarts/countStudentByScore',
           data:postData,
           }).then(function(response){
             this.countStudentByScore = response.data.data
@@ -821,7 +946,7 @@ export default {
         });
         this.$axios({
           method: 'post',
-          url: '/api/echarts/countFullScoreByLessonId',
+          url: '/course/echarts/countFullScoreByLessonId',
           data:postData,
           }).then(function(response){
             this.countFullScoreByLessonId = response.data.data
@@ -832,30 +957,30 @@ export default {
    },
    queryecharts3(){
      let postData = this.$qs.stringify({
-          pageSize:7
+          pageSize:this.zkxs
         });
         this.$axios({
           method: 'post',
-          url: '/api/echarts/rankByImprove',
+          url: '/course/echarts/rankByImprove',
           data:postData,
           }).then(function(response){
-            this.rankByImprove = response.data.data
-            this.showEcharts4()
+            this.rankByImprove = response.data.data.rows
+            // this.showEcharts4()
           }.bind(this)).catch(function(error){
             console.log(error);
           });
    },
    queryecharts4(){
      let postData = this.$qs.stringify({
-          pageSize:7
+          capabilityPid:this.fids
         });
         this.$axios({
           method: 'post',
-          url: '/api/echarts/rankByCapabilityPid',
+          url: '/course/echarts/rankByCapabilityPid',
           data:postData,
           }).then(function(response){
-            this.rankByCapabilityPid = response.data.data
-            this.showEcharts5()
+            this.rankByCapabilityPid = response.data.data.rows
+            // this.showEcharts5()
           }.bind(this)).catch(function(error){
             console.log(error);
           });
@@ -894,7 +1019,7 @@ export default {
             name: "本期学生总数",
             type: "line",
             stack: "总量",
-            data: that.CountStudent.lessonTime
+            data: that.CountStudent.lessonStudents
           },
           {
             name: "学生总数",
@@ -924,12 +1049,7 @@ export default {
             type: "pie",
             radius: "55%",
             // center: ["50%", "60%"],
-            data: [
-              { value: 335, name: "70分以下" },
-              { value: 310, name: "70分-79分" },
-              { value: 234, name: "80分-89分" },
-              { value: 135, name: "90分以上" }
-            ]
+            data: this.countStudentByScore
           }
         ]
       };
@@ -953,108 +1073,15 @@ export default {
             type: "pie",
             radius: "55%",
             // center: ["50%", "60%"],
-            data: [
-              { value: 335, name: "沟通能力" },
-              { value: 310, name: "领导能力" },
-              { value: 234, name: "适应性" },
-              { value: 135, name: "思维习惯" },
-              { value: 300, name: "决策能力" },
-              { value: 234, name: "批判性思维" },
-              { value: 135, name: "分析创造" },
-              { value: 300, name: "全球视野" }
-            ]
+            data: this.countFullScoreByLessonId
           }
         ]
       };
       myChart3.setOption(option3);
    },
-   showEcharts4() {
-      var that = this;
-      let myChart4 = this.$echarts.init(document.getElementById("progress"));
-      let option4 = {
-        tooltip: {
-          trigger: "item",
-          formatter: "{a} <br/>{b} : {c} ({d}%)"
-        },
-
-        legend: {
-          x: "center",
-          data: ["小明（沟通能力）", "小红（表达能力）", "小王（领导能力）"]
-        },
-        toolbox: {
-          show: true
-        },
-        // calculable: true,
-        series: [
-          {
-            name: "满分100分",
-            type: "pie",
-            radius: "55%",
-            itemStyle: {
-              normal: {
-                label: {
-                  show: false //隐藏标示文字
-                },
-                labelLine: {
-                  show: false //隐藏标示线
-                }
-              }
-            },
-            // center: ["50%", "60%"],
-            data: [
-              { value: 335, name: "小明（沟通能力）" },
-              { value: 310, name: "小红（表达能力）" },
-              { value: 234, name: "小王（领导能力）" }
-            ]
-          }
-        ]
-      };
-       myChart4.setOption(option4);
-   },
-   showEcharts5() {
-      var that = this;
-      let myChart5 = this.$echarts.init(document.getElementById("lately"));
-      let option5 = {
-        tooltip: {
-          trigger: "item",
-          formatter: "{a} <br/>{b} : {c} ({d}%)"
-        },
-
-        legend: {
-          x: "center",
-          data: ["小明（沟通能力）", "小红（表达能力）", "小王（领导能力）"]
-        },
-        toolbox: {
-          show: true
-        },
-        // calculable: true,
-        series: [
-          {
-            name: "满分100分",
-            type: "pie",
-            radius: "55%",
-            itemStyle: {
-              normal: {
-                label: {
-                  show: false //隐藏标示文字
-                },
-                labelLine: {
-                  show: false //隐藏标示线
-                }
-              }
-            },
-            // center: ["50%", "60%"],
-            data: [
-              { value: 335, name: "小明（沟通能力）" },
-              { value: 310, name: "小红（表达能力）" },
-              { value: 234, name: "小王（领导能力）" }
-            ]
-          }
-        ]
-      };
-      myChart5.setOption(option5);
-    }
-  }
+   
+  },
+  
 };
 </script>
 
