@@ -604,6 +604,7 @@ export default {
     LoadStudentList(){
       this.studentVisible = !this.studentVisible
       this.queryLessonStudentList();
+      
     },
     //全选学生
     selectAll(){
@@ -630,9 +631,11 @@ export default {
         data:postData,
         }).then(function(response){
           if(response.data.success){
+            this.value = []
             this.value = response.data.data.rows.map(function(item){
               return item.studentId
             })
+            
           }else{
             this.value = []
           }
@@ -643,14 +646,28 @@ export default {
     },
     //课程选择学生列表
     insertLessonStudentList(){
-      var ms = [];
-      ms = this.value.map(function(item){
-         return {
-           studentId:item
-         }
-      })
+      
+      // var ms = [];
+      // this.value = this.value.map(function(item){
+      //    return {
+      //      studentId:item
+      //    }
+      // })
+      this.value = this.value.map(item => ({
+          studentId: item
+        })).sort((prev, next) => {
+          return prev.studentId>next.studentId;
+        }).filter((item, index, arr) => {
+          if(index == 0){
+            return true
+          }else{
+            return item.studentId != arr[index-1].studentId;
+          }
+          
+        });
+      console.log(this.value)
       let postData = this.$qs.stringify({
-          studentIds:JSON.stringify(ms),
+          studentIds:JSON.stringify(this.value),
           lessonId:this.insertLessonList.id
         });
       this.$axios({
@@ -663,6 +680,7 @@ export default {
             position: 'bottom',
             duration: 1000
           });
+          this.value=[]
           this.studentVisible = !this.studentVisible;
           this.showLesson();
         }.bind(this)).catch(function(error){
@@ -1079,7 +1097,10 @@ export default {
       };
       myChart3.setOption(option3);
    },
-   
+  unique5(arr){
+      var x = new Set(arr);
+    return [...x];
+    }
   },
   
 };
